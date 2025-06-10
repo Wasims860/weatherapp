@@ -1,20 +1,116 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Blank
+      Weather App
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="weather-background">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
+      <ion-title size="large">Weather App</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+  <div class="weather-container">
+    <!-- Search Bar -->
+    <div class="search-container">
+      <ion-searchbar 
+        [(ngModel)]="searchQuery"
+        (ionInput)="onSearchInput($event)"
+        placeholder="Search for a city..."
+        show-clear-button="focus">
+      </ion-searchbar>
+      
+      <!-- Search Results -->
+      <ion-list *ngIf="searchResults.length > 0" class="search-results">
+        <ion-item 
+          *ngFor="let result of searchResults" 
+          button 
+          (click)="selectCity(result)">
+          <ion-label>{{result.name}}, {{result.country}}</ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <ion-spinner name="circular"></ion-spinner>
+      <p>Loading weather data...</p>
+    </div>
+
+    <!-- Weather Content -->
+    <div *ngIf="weatherData && !loading" class="main-weather-container">
+      
+      <!-- Current Weather Card -->
+      <div class="current-weather-card">
+        <div class="current-temp-section">
+          <div class="temperature">
+            <span class="temp-value">{{weatherData.current.temp_c}}</span>
+            <span class="temp-unit">°C</span>
+          </div>
+          <div class="condition">{{weatherData.current.condition.text}}</div>
+          <div class="location">{{weatherData.location.name}}, {{weatherData.location.country}}</div>
+        </div>
+        
+        <div class="weather-icon-section">
+          <img [src]="'https:' + weatherData.current.condition.icon" 
+               [alt]="weatherData.current.condition.text"
+               class="weather-icon">
+        </div>
+        
+        <div class="weather-details">
+          <div class="detail-item">
+            <ion-icon name="flag-outline"></ion-icon>
+            <span>Wind: {{weatherData.current.wind_kph}}kph</span>
+          </div>
+          <div class="detail-item">
+            <ion-icon name="water-outline"></ion-icon>
+            <span>Humidity: {{weatherData.current.humidity}}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-Day Forecast -->
+      <div class="forecast-container">
+        <h3>5-Day Forecast</h3>
+        <div class="forecast-list">
+          <div *ngFor="let day of weatherData.forecast.forecastday; let i = index" 
+               class="forecast-item">
+            <div class="forecast-day">
+              <span class="day-name">{{getDayName(day.date, i)}}</span>
+              <div class="forecast-temp">{{Math.round(day.day.maxtemp_c)}}°</div>
+            </div>
+            <img [src]="'https:' + day.day.condition.icon" 
+                 [alt]="day.day.condition.text"
+                 class="forecast-icon">
+          </div>
+        </div>
+      </div>
+
+      <!-- Hourly Forecast -->
+      <div class="hourly-container">
+        <h3>Hourly Forecast</h3>
+        <div class="hourly-scroll">
+          <div *ngFor="let hour of getTodayHours()" class="hourly-item">
+            <div class="hour-time">{{getHourTime(hour.time)}}</div>
+            <img [src]="'https:' + hour.condition.icon" 
+                 [alt]="hour.condition.text"
+                 class="hourly-icon">
+            <div class="hour-temp">{{Math.round(hour.temp_c)}}°</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-container">
+      <ion-icon name="warning-outline" color="danger"></ion-icon>
+      <p>{{error}}</p>
+      <ion-button (click)="loadCurrentLocationWeather()" fill="outline">
+        Try Again
+      </ion-button>
+    </div>
   </div>
 </ion-content>
